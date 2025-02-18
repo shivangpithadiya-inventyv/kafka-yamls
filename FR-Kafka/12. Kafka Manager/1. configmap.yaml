@@ -1,0 +1,9 @@
+apiVersion: v1
+data:
+  ZK_HOSTS: 'fr-data-zoo-entrance:2181'
+kind: ConfigMap
+metadata:
+  annotations:
+    strategy.spinnaker.io/versioned: 'false'
+  name: cnf-kafkamanager-hc
+  namespace: ns-data-hc

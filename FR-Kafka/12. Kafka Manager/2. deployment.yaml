@@ -1,0 +1,51 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    role: svc-km
+  name: svc-fr-data-kafkamanager
+  namespace: ns-data-hc
+spec:
+  ports:
+    - name: kafkamanager
+      port: 9000
+      protocol: TCP
+      targetPort: 9000
+  selector:
+    instance: pod-km
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fr-data-kafkamanager
+  namespace: ns-data-hc
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      role: pod-km
+  template:
+    metadata:
+      annotations:
+        sidecar.istio.io/inject: 'false'
+      labels:
+        instance: pod-km
+        role: pod-km
+    spec:
+      containers:
+        - env:
+            - name: ZK_HOSTS
+              valueFrom:
+                configMapKeyRef:
+                  key: ZK_HOSTS
+                  name: cnf-kafkamanager-hc
+          image: 'gcr.io/mtpo-prod/artifacts/kafka-manager:test'
+          imagePullPolicy: IfNotPresent
+          name: pod-infra-kafkamanager
+          ports:
+            - containerPort: 9000
+              protocol: TCP
+      dnsPolicy: ClusterFirst
+      imagePullSecrets:
+        - name: mtpo-prod-regsecret

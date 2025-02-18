@@ -1,0 +1,197 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: np-allow-data-kafka
+  namespace: ns-data-hc
+spec:
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              strimzi.io/name: fr-data-kafka
+      ports:
+        - port: 9090
+          protocol: TCP
+        - port: 9091
+          protocol: TCP
+        - port: 9092
+          protocol: TCP
+        - port: 9095
+          protocol: TCP
+        - port: 9096
+          protocol: TCP
+        - port: 9094
+          protocol: TCP
+    - from:
+        - namespaceSelector: {}
+          podSelector:
+            matchLabels:
+              strimzi.io/kind: cluster-operator
+        - podSelector:
+            matchLabels:
+              strimzi.io/name: fr-data-entity-operator
+        - podSelector:
+            matchLabels:
+              strimzi.io/name: fr-data-kafka-exporter
+      ports:
+        - port: 9091
+          protocol: TCP
+        - port: 9092
+          protocol: TCP
+        - port: 9095
+          protocol: TCP
+        - port: 9096
+          protocol: TCP
+        - port: 9094
+          protocol: TCP
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              ca-ns-access-data: 'true'
+          podSelector:
+            matchLabels:
+              ca-access-kafka: 'true'
+      ports:
+        - port: 9092
+          protocol: TCP
+        - port: 9095
+          protocol: TCP
+        - port: 9094
+          protocol: TCP
+        - port: 9096
+          protocol: TCP
+    - from:
+        - podSelector:
+            matchLabels:
+              ca-access-kafka: 'true'
+      ports:
+        - port: 9092
+          protocol: TCP
+        - port: 9095
+          protocol: TCP
+        - port: 9094
+          protocol: TCP
+        - port: 9096
+          protocol: TCP
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              ca-ns-access-logging: 'true'
+      ports:
+        - port: 9092
+          protocol: TCP
+    - from:
+        - ipBlock:
+            cidr: 192.168.42.253/32
+        - ipBlock:
+            cidr: 192.168.42.252/32
+      ports:
+        - port: 9096
+          protocol: TCP
+    - from:
+        - ipBlock:
+            cidr: 10.42.0.0/16
+      ports:
+        - port: 9096
+          protocol: TCP
+    - from:
+        - ipBlock:
+            cidr: 192.168.42.187/24
+        - ipBlock:
+            cidr: 192.168.42.3/24
+        - ipBlock:
+            cidr: 192.168.42.4/24
+        - ipBlock:
+            cidr: 192.168.42.188/24
+        - ipBlock:
+            cidr: 192.168.42.114/24
+        - ipBlock:
+            cidr: 192.168.42.41/24
+        - ipBlock:
+            cidr: 192.168.42.42/24
+        - ipBlock:
+            cidr: 192.168.42.116/24
+        - ipBlock:
+            cidr: 192.168.42.131/24
+      ports:
+        - port: 9096
+          protocol: TCP
+  podSelector:
+    matchLabels:
+      strimzi.io/name: fr-data-kafka
+  policyTypes:
+    - Ingress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: np-allow-data-zookeeper
+  namespace: ns-data-hc
+spec:
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              strimzi.io/name: fr-data-zookeeper
+      ports:
+        - port: 2181
+          protocol: TCP
+        - port: 2888
+          protocol: TCP
+        - port: 3888
+          protocol: TCP
+    - from:
+        - namespaceSelector: {}
+          podSelector:
+            matchLabels:
+              strimzi.io/kind: cluster-operator
+        - podSelector:
+            matchLabels:
+              strimzi.io/name: fr-data-entity-operator
+        - podSelector:
+            matchLabels:
+              app: zoo-entrance
+        - podSelector:
+            matchLabels:
+              strimzi.io/name: fr-data-kafka
+        - podSelector:
+            matchLabels:
+              strimzi.io/name: fr-data-kafka-exporter
+      ports:
+        - port: 2181
+          protocol: TCP
+  podSelector:
+    matchLabels:
+      strimzi.io/name: fr-data-zookeeper
+  policyTypes:
+    - Ingress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: np-allow-data-kafka-connector
+  namespace: ns-data-hc
+spec:
+  ingress:
+    - from:
+        - namespaceSelector: {}
+          podSelector:
+            matchLabels:
+              strimzi.io/kind: cluster-operator
+        - podSelector:
+            matchLabels:
+              strimzi.io/kind: KafkaConnect
+        - podSelector:
+            matchLabels:
+              strimzi.io/name: fr-data-kafka-exporter
+        - podSelector:
+            matchLabels:
+              strimzi.io/name: kafkaconnect-cluster-fr-connect
+      ports:
+        - port: 8083
+          protocol: TCP
+  podSelector:
+    matchLabels:
+      strimzi.io/kind: KafkaConnect
+  policyTypes:
+    - Ingress

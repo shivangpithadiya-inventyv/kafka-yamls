@@ -1,0 +1,89 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: zoo-entrance
+  name: fr-data-zoo-entrance
+  namespace: ns-data-hc
+spec:
+  ports:
+    - name: zoo
+      port: 2181
+      protocol: TCP
+      targetPort: 2181
+  selector:
+    app: zoo-entrance
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: zoo-entrance
+    app.kubernetes.io/name: data-kafka
+  name: zoo-entrance
+  namespace: ns-data-hc
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: zoo-entrance
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        sidecar.istio.io/inject: 'false'
+      labels:
+        app: zoo-entrance
+    spec:
+      containers:
+        - command:
+            - /opt/stunnel/stunnel_run.sh
+          env:
+            - name: LOG_LEVEL
+              value: notice
+            - name: STRIMZI_ZOOKEEPER_CONNECT
+              value: 'fr-data-zookeeper-client.ns-data-hc:2181'
+          image: 'docker.io/scholzj/zoo-entrance:latest'
+          imagePullPolicy: Always
+          livenessProbe:
+            exec:
+              command:
+                - /opt/stunnel/stunnel_healthcheck.sh
+                - '2181'
+            failureThreshold: 3
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+          name: zoo-entrance
+          ports:
+            - containerPort: 2181
+              name: zoo
+              protocol: TCP
+          readinessProbe:
+            exec:
+              command:
+                - /opt/stunnel/stunnel_healthcheck.sh
+                - '2181'
+            failureThreshold: 3
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+          volumeMounts:
+            - mountPath: /etc/cluster-operator-certs/
+              name: cluster-operator-certs
+            - mountPath: /etc/cluster-ca-certs/
+              name: cluster-ca-certs
+      dnsPolicy: ClusterFirst
+      volumes:
+        - name: cluster-operator-certs
+          secret:
+            defaultMode: 288
+            secretName: fr-data-cluster-operator-certs
+        - name: cluster-ca-certs
+          secret:
+            defaultMode: 288
+            secretName: fr-data-cluster-ca-cert

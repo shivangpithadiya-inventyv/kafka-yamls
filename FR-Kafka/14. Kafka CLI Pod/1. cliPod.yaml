@@ -1,0 +1,65 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  annotations:
+    pv.kubernetes.io/bound-by-controller: 'yes'
+  finalizers:
+    - kubernetes.io/pv-protection
+  name: pv-kafka-07
+spec:
+  accessModes:
+    - ReadWriteOnce
+  capacity:
+    storage: 200Gi
+  claimRef:
+    apiVersion: v1
+    kind: PersistentVolumeClaim
+    name: data-0-fr-data-kafka-6
+    namespace: ns-data-hc
+  hostPath:
+    path: /var/mnt/datavol2/kafka
+    type: ''
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - fkw07
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: sc-kafka
+  volumeMode: Filesystem
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  annotations:
+    pv.kubernetes.io/bound-by-controller: 'yes'
+  finalizers:
+    - kubernetes.io/pv-protection
+  name: pv-zookeeper-07
+spec:
+  accessModes:
+    - ReadWriteOnce
+  capacity:
+    storage: 200Gi
+  claimRef:
+    apiVersion: v1
+    kind: PersistentVolumeClaim
+    name: data-fr-data-zookeeper-6
+    namespace: ns-data-hc
+  hostPath:
+    path: /var/mnt/datavol2/zookeeper
+    type: ''
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - fkw07
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: sc-zookeeper
+  volumeMode: Filesystem
